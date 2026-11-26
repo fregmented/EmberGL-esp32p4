@@ -105,8 +105,9 @@ Four boundaries carry all information across the `extern "C"` line
 ## 4. Memory model (proposal)
 
 - **Internal SRAM** (ESTIMATED ~620 KB usable on rev ≥ v3 silicon: 768 KB
-  window − 128 KB default L2 carve-out − ~20 KB top reservation; rev < v3
-  gives ≈236 KiB — see `02` row 3):
+  window − 128 KB default L2 carve-out − ~20 KB top reservation; if the
+  target is rev < v3 (silicon revision `[U]`), usable end `0x4ff3afc0`,
+  ≈236 KiB — see `02` row 3):
   render tile (64×64), depth tile, Hi-Z, PTV buffer, per-worker tile
   buffers, stacks, port statics. Illustrative footprint for a 480×800
   RGB565 device with default config, `max_concurrency=1` (ESTIMATED from the

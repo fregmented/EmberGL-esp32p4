@@ -119,6 +119,12 @@ filed in Phase 0).
 | `docs/agents/domain.md` | new | 3 |
 | `docs/phase0/00…06` (7 files) | new | 3 |
 | `README.md` | modified — prefix prepended; upstream suffix byte-identical | 4 |
+| `CODING_CONVENTION.md` | modified — one line: §1 rule-hierarchy self-reference `CONTRIBUTION.md` → `CODING_CONVENTION.md` (CRLF-native file; line convention preserved) | 5 (`d1865bc`) |
+
+The complete PR file set is therefore **19 files** across the 5 commits:
+18 files from commits 1–4 plus the commit-5 correction to
+`CODING_CONVENTION.md` (review corrections are documented in the PR body
+and in `d1865bc`'s message).
 
 Nothing under `src/`, `examples/`, `doc/`, `example/` was modified; no
 `port/`, root `CMakeLists.txt`, `idf_component.yml`, `CLAUDE.md`, or

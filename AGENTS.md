@@ -142,9 +142,10 @@ Facts verified for ESP32-P4 under IDF 6.1.1 (evidence in `docs/phase0/02`):
   `SOC_IRAM_HIGH 0x4ffc0000`). Usable internal DRAM is an **ESTIMATED
   ~620 KB** for rev ≥ v3 silicon: 768 KB − 128 KB default L2 carve-out
   (`CONFIG_CACHE_L2_CACHE_SIZE=0x20000`) − ~20 KB top reservation
-  (`0x5040`; usable heap ends at `0x4ffbafc0`). For rev < v3 the layout
-  differs (usable end `0x4ff3afc0`, ≈236 KiB) — detect the silicon
-  revision at runtime, never assume one layout. The carve-out is already
+  (`0x5040`; usable heap ends at `0x4ffbafc0`). If the target is rev < v3
+  (silicon revision `[U]`), the layout differs: usable end `0x4ff3afc0`,
+  ≈236 KiB — detect the silicon revision at runtime, never assume one
+  layout. The carve-out is already
   subtracted in this arithmetic; do not subtract it twice.
 - Memory class is caller/provider-selected, not fixed by this project.
   The Phase 0 design default places tile buffers in internal SRAM and
