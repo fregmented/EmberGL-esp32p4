@@ -9,15 +9,15 @@ Analysis date: 2026-11-26.
 
 | Item | Value | Evidence |
 | --- | --- | --- |
-| Upstream project | `github.com/EmberGL-Org/EmberGL` | `library.properties:6` (`url=`) |
+| Upstream project | `github.com/EmberGL-Org/EmberGL` | `library.properties:8` (`url=`) |
 | Baseline release | tag `v0.1.1` | `git tag -l` |
-| Baseline commit | `cedba19604ddfa6f2de5679cf398952de3a554d` | `git rev-parse v0.1.1` |
+| Baseline commit | `cedba19604ddfa6f2de5679cf398952de7a3e554` | `git rev-parse v0.1.1` (= `git rev-parse v0.1.1^{commit}`; also `.git/packed-refs`) |
 | Upstream `main` at audit | `6c197451257d3b2d800b40d4e21e5e3fe4f52ae7` | `git ls-remote` (2026-11-26, network) |
 | Fork-local line | `6c19745` → `c5ac273` (agent-docs submodule) → `533dc7d` (`Update initial commits`) | `git log --oneline -5` |
 | License | MIT, © 2022 Jarkko Lempiainen | `LICENSE:3`; every `src/` file header (e.g. `src/egl_core.h:4-5`) |
 | Version | `0.1.1` | `VERSION`; `library.properties:2` |
 | Byte-identity of `src/`, `examples/`, `LICENSE`, `library.properties` vs v0.1.1 | identical (empty diff) | `git diff --exit-code v0.1.1 -- src examples LICENSE library.properties` |
-| Whole-tree delta vs v0.1.1 at `533dc7d` | `.gitignore` (new), `.gitmodules` (+1 submodule), `docs/agents/general_instruction` (submodule), `example/` (7-file IDF scaffold), FUNDING removal | `git diff --stat v0.1.1 533dc7d` |
+| Whole-tree delta vs v0.1.1 at `533dc7d` | 12 files, +1871/−1: FUNDING removal −1, `.gitignore` +273, `.gitmodules` +3, `CODING_CONVENTION.md` +1470, `docs/agents/general_instruction` submodule +1, `example/` +124 in 7 files | `git diff --stat v0.1.1 533dc7d` |
 
 The fork remote is `git@github.com:fregmented/EmberGL-esp32p4.git` (a fork of
 `EmberGL-org/EmberGL`). Upstream was reachable at audit time and its
@@ -39,7 +39,7 @@ The fork remote is `git@github.com:fregmented/EmberGL-esp32p4.git` (a fork of
 
 Sum check: 1,221 + 14,737 + 4,318 + 1,432 + 2,981 + 1,473 = 26,162.
 
-Entry point note: `library.properties:7` declares `includes=egl_device_lib.h`,
+Entry point note: `library.properties:10` declares `includes=egl_device_lib.h`,
 but that header conditionally includes the two Arduino drivers when `ARDUINO`
 is defined and otherwise collapses to `egl_core.h`
 (`src/egl_device_lib.h:15-22`). On ESP-IDF (no `ARDUINO`) it is effectively
@@ -154,7 +154,10 @@ All items MEASURED from headers; line anchors given.
 - **No SIMD intrinsics**: grep for `_mm_|vld1|__ARM_NEON|__riscv_v|RVV` over
   `src/` returns zero hits. The library is scalar C++ with float math.
 - **Syntax compatibility** (MEASURED, GCC 15.2.0 cross-compile to
-  `rv32imafc_zicsr_zifencei`, `-fsyntax-only`): a TU including all public
+  `rv32imafdc_zicsr_zifencei_zaamo_zalrsc` with `-mabi=ilp32`,
+  `-fsyntax-only`; canonical command
+  `riscv32-esp-elf-g++ -std=<std> -march=rv32imafdc_zicsr_zifencei_zaamo_zalrsc -mabi=ilp32 -Isrc -fsyntax-only <file>`,
+  log `/tmp/opencode/embergl-p4/syntax-check.log`): a TU including all public
   headers passes at `-std=gnu++11`, `gnu++17`, `gnu++20`, and `gnu++26`; the
   six non-driver `.cpp` files pass at `-std=gnu++26`. This is a
   syntax/semantic check only — **no P4 integration build of the library

@@ -13,13 +13,16 @@ low-level 2D/3D software rasterization library for memory-constrained systems.
   general-purpose library: anything tied to a specific display, panel, touch
   controller, carrier board, or end product is out of scope for `src/` and the
   future `port/` layer.
-- The upstream baseline is EmberGL **v0.1.1** (`cedba19604ddfa6f2de5679cf398952de3a554d`,
+- The upstream baseline is EmberGL **v0.1.1** (`cedba19604ddfa6f2de5679cf398952de7a3e554`,
   MIT, © 2022 Jarkko Lempiainen). `src/`, `examples/`, `doc/` are frozen
   upstream code (see ADR-0001).
 - **Phase 0 is design only.** No platform code, no component packaging, no
   hardware integration exists yet. Docs must not describe planned work as
-  existing. The only executed verification in Phase 0 is the build check of the
-  stock `example/` project for `esp32p4`.
+  existing. The executed **build** verification in Phase 0 is the stock
+  `example/` project build for `esp32p4` plus `-fsyntax-only`
+  cross-compiles of the frozen `src/` — neither links nor runs EmberGL.
+  Git traceability gates and GitHub tracker commands were also executed,
+  but they are process checks, not product verification.
 
 ## Read first and precedence
 
@@ -35,9 +38,12 @@ Before making any change, read in this order:
 6. Task-specific docs (`docs/phase0/`).
 
 Precedence when documents conflict: the explicit task brief > ADRs >
-`CODING_CONVENTION.md` > `AGENTS.md` > `docs/agents/*` > `GLOSSARY.md`.
-`CODING_CONVENTION.md` explicitly exempts third-party/vendor code from
-conformance; upstream `src/` is third-party code.
+`AGENTS.md` > `docs/agents/*` > `GLOSSARY.md`, with one carve-out: for
+**code style and safety rules, `CODING_CONVENTION.md` outranks ADRs and
+every other document for repo-owned code** — its §1 rule hierarchy is
+authoritative for anything this repository owns. `CODING_CONVENTION.md`
+explicitly exempts third-party/vendor code from conformance; upstream
+`src/` is third-party code.
 
 ## Toolchain and build verification
 
@@ -53,7 +59,15 @@ conformance; upstream `src/` is third-party code.
 - `example/` is the ESP32-P4 test project (a stock IDF scaffold with managed
   display/touch component dependencies pinned in `example/main/idf_component.yml`).
   It is the build-verification target only; it does not yet use EmberGL.
-- **Never run `idf.py` inside the repository.** Build only from a copy:
+- **Phase 0 artifact-hygiene rule: do not run `idf.py` inside the
+  repository.** Reason: `idf.py set-target` runs `fullclean` and writes
+  `sdkconfig`, `dependencies.lock`, `managed_components/`, and `build/`
+  into the project directory (observed in the Phase 0 run:
+  `/tmp/opencode/embergl-p4/example-set-target.log`), which would dirty the
+  frozen tree. Later phases may build in-tree once these artifacts are
+  properly ignored — but `dependencies.lock` is deliberately **not**
+  ignored, so it must then be committed deliberately. Until then, build
+  only from a copy:
 
   ```bash
   cd <repository root>   # the repo itself; no build happens here
@@ -88,6 +102,8 @@ conformance; upstream `src/` is third-party code.
 - Repo-owned Phase 0 additions live in: `AGENTS.md`, `GLOSSARY.md`,
   `.gitignore`, `docs/adr/`, `docs/agents/*.md` (not the submodule),
   `docs/phase0/`, `README.md` (prefix-only extension).
+  `CODING_CONVENTION.md` is also repo-owned (committed just before Phase 0);
+  edits to it follow its own §1 rule hierarchy.
 - Do not create in Phase 0: root `CMakeLists.txt`, root `idf_component.yml`,
   `port/`, `CLAUDE.md`, `GLOSSARY-MAP.md`. The root-as-component proposal is
   ADR-0002 (Phase 1); its files do not exist yet.
@@ -123,19 +139,36 @@ Phase 1). The Phase 0 direction:
 Facts verified for ESP32-P4 under IDF 6.1.1 (evidence in `docs/phase0/02`):
 
 - Internal SRAM window is 768 KB (`SOC_IRAM_LOW 0x4ff00000` …
-  `SOC_IRAM_HIGH 0x4ffc0000`; usable heap ends at `0x4ffbafc0`), and the
-  default L2 cache **carves 128 KB out of that SRAM**
-  (`CONFIG_CACHE_L2_CACHE_SIZE=0x20000`).
-  Tile buffers must stay in internal SRAM; framebuffers belong in PSRAM.
+  `SOC_IRAM_HIGH 0x4ffc0000`). Usable internal DRAM is an **ESTIMATED
+  ~620 KB** for rev ≥ v3 silicon: 768 KB − 128 KB default L2 carve-out
+  (`CONFIG_CACHE_L2_CACHE_SIZE=0x20000`) − ~20 KB top reservation
+  (`0x5040`; usable heap ends at `0x4ffbafc0`). For rev < v3 the layout
+  differs (usable end `0x4ff3afc0`, ≈236 KiB) — detect the silicon
+  revision at runtime, never assume one layout. The carve-out is already
+  subtracted in this arithmetic; do not subtract it twice.
+- Memory class is caller/provider-selected, not fixed by this project.
+  The Phase 0 design default places tile buffers in internal SRAM and
+  framebuffers in PSRAM **where PSRAM exists**; tile-buffer placement in
+  internal SRAM is an unvalidated assumption (`[U]`, `docs/phase0/06`
+  A3) pending Phase 1/2 measurement. Nothing in the port may require
+  PSRAM to be present.
 - `CONFIG_SPIRAM` defaults to **off**; the PSRAM aperture is 64 MB at
   `0x48000000` (`SOC_EXTRAM_LOW..SOC_EXTRAM_HIGH`), but on-board capacity is
   runtime-detected and unverified for any board.
 - Cache lines: L1 = 64 B (`CONFIG_CACHE_L1_CACHE_LINE_SIZE=64`), L2 = 64 B
   default (128/256/512 KB selectable; 512 KB forces 128 B lines).
-  **Never hardcode alignment** — query it at runtime with the public
-  `esp_cache_get_line_size_by_addr()`; the alignment helper
-  `esp_cache_get_alignment()` is private in IDF 6.1.1
-  (`esp_private/esp_cache_private.h`).
+  **Never hardcode alignment.** IDF 6.1.1 has no public pre-allocation
+  alignment API: `esp_cache_get_alignment()` and `dma2d_get_alloc_alignment()`
+  are private (`esp_private/esp_cache_private.h`, `esp_private/async_memcpy_dma2d.h`),
+  and the public `esp_cache_get_line_size_by_addr(addr)` requires an existing
+  address (returns 0 for NULL/non-cacheable). Recipe: derive the allocator
+  alignment from the build config — `max(CONFIG_CACHE_L1_CACHE_LINE_SIZE,
+  CONFIG_CACHE_L2_CACHE_LINE_SIZE)` for external (PSRAM) memory,
+  `CONFIG_CACHE_L1_CACHE_LINE_SIZE` for internal-only buffers — then, after
+  allocation, verify `esp_cache_get_line_size_by_addr(buf)` is non-zero and
+  divides both the address and the size. MSPI/DMA2D alignment may exceed the
+  cache line; relying on private helpers is a separate decision (see
+  `docs/phase0/06` Q10).
 - **Internal SRAM is L1-cached** on P4 (`SOC_CACHE_INTERNAL_MEM_VIA_L1CACHE 1`).
   There is no coherent internal RAM: every CPU-written buffer that DMA/PPA
   reads needs `esp_cache_msync(buf, size, ESP_CACHE_MSYNC_FLAG_DIR_C2M)` before
@@ -150,9 +183,11 @@ Facts verified for ESP32-P4 under IDF 6.1.1 (evidence in `docs/phase0/02`):
   after any `fast_draw_*` into a DMA-read surface, a C2M msync of the touched
   rows is mandatory before device consumption.
 - Allocation recipe for any buffer devices will touch:
-  `heap_caps_aligned_calloc(<runtime alignment>, 1, size,
-  MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT|MALLOC_CAP_DMA)` for PSRAM buffers
-  (pattern used by `$IDF_PATH/components/esp_lcd/dsi/esp_lcd_panel_dpi.c:233-245`).
+  `heap_caps_aligned_calloc(<config-derived alignment — see the cache-lines
+  bullet above>, 1, size, MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT|MALLOC_CAP_DMA)`
+  for PSRAM buffers (pattern used by
+  `$IDF_PATH/components/esp_lcd/dsi/esp_lcd_panel_dpi.c:233-245`, which
+  uses the driver-internal alignment helper).
 - EmberGL's own memory model is zero-heap: all rasterizer storage is declared
   by the app (`rasterizer_memory` aggregate, `src/egl_rasterizer.h:104-146`).
   Keep it that way: caller-provided arena, no steady-state allocation.

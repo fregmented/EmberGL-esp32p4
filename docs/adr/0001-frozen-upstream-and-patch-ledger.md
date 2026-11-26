@@ -19,15 +19,17 @@ needs a verifiable baseline and a rule for how deviations may ever happen.
 
 Verified baseline facts:
 
-- Upstream release: tag `v0.1.1`, commit `cedba19604ddfa6f2de5679cf398952de3a554d`
+- Upstream release: tag `v0.1.1`, commit `cedba19604ddfa6f2de5679cf398952de7a3e554`
   (local tag `v0.1.1` resolves to the same hash; upstream
   `github.com/EmberGL-Org/EmberGL` serves the same `refs/tags/v0.1.1`).
 - License: MIT, © 2022 Jarkko Lempiainen (`LICENSE` line 3; every `src/`
   file carries the same header, e.g. `src/egl_core.h:4-5`).
 - At Phase 0 start, `git diff --stat v0.1.1 -- src examples LICENSE library.properties`
-  is empty: those paths are byte-identical to the tag. The only fork-local
-  commits at that point are the removal of `.github/FUNDING.yml` and agent-doc
-  additions (`6c19745` → `533dc7d`).
+  is empty: those paths are byte-identical to the tag. The whole-tree delta
+  at the Phase 0 base commit `533dc7d` (i.e. `v0.1.1..533dc7d`) is 12 files,
+  +1871/−1: `.github/FUNDING.yml` −1, `.gitignore` +273, `.gitmodules` +3,
+  `CODING_CONVENTION.md` +1470, the `docs/agents/general_instruction`
+  submodule pointer +1, and `example/` +124 across 7 files.
 
 ## Decision
 
@@ -61,6 +63,13 @@ Verified baseline facts:
 
 5. Phase 0 creates **no** patches: the ledger starts empty.
 
+## Alternatives considered
+
+A hard fork that rewrites the rasterizer was rejected because it would
+forfeit future upstream fixes; continuously tracking upstream `main` with no
+freeze was rejected because it makes fork-local behavior unverifiable at any
+given commit.
+
 ## Consequences
 
 - Upstream fixes can be merged with trivial conflict cost while the ledger is
@@ -74,12 +83,19 @@ Verified baseline facts:
 
 ## Evidence
 
-- MEASURED: `git rev-parse v0.1.1` → `cedba19604ddfa6f2de5679cf398952de3a554d`;
+- MEASURED: `git rev-parse v0.1.1` → `cedba19604ddfa6f2de5679cf398952de7a3e554`
+  (`git rev-parse v0.1.1^{commit}` resolves to the same 40-character hash;
+  `.git/packed-refs` records the same value for `refs/tags/v0.1.1`);
   `git tag -l` → `v0.1.0`, `v0.1.1`.
-- MEASURED: `git diff --stat v0.1.1 HEAD` at Phase 0 start → only
-  `.github/FUNDING.yml` (−1), `.gitmodules` (+3), submodule pointer (+1);
-  no `src/`/`examples/`/`doc/` paths.
+- MEASURED: `git diff --stat v0.1.1 533dc7d` at Phase 0 start → 12 files
+  changed, 1871 insertions(+), 1 deletion(-): `.github/FUNDING.yml` −1,
+  `.gitignore` +273, `.gitmodules` +3, `CODING_CONVENTION.md` +1470,
+  submodule pointer +1, `example/` +124 in 7 files; no
+  `src/`/`examples/`/`doc/` paths. (The earlier three-file delta —
+  FUNDING/`.gitmodules`/submodule — was the pre-Phase-0 snapshot
+  `v0.1.1..c5ac273`, superseded by `533dc7d`.)
 - MEASURED: `LICENSE:3` = `Copyright (c) 2022 Jarkko Lempiainen`;
   `VERSION` = `0.1.1`; `library.properties` `version=0.1.1`.
 - MEASURED (network, 2026-11-26): `git ls-remote https://github.com/EmberGL-Org/EmberGL`
-  returns `refs/tags/v0.1.1` = `cedba196…` — local tag matches upstream.
+  returns `refs/tags/v0.1.1` = `cedba19604ddfa6f2de5679cf398952de7a3e554` —
+  local tag matches upstream.

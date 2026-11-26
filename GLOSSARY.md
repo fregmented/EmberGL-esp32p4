@@ -15,7 +15,7 @@ _Avoid_: "the library code" ambiguously including port code; "EmberGL" alone
 when you mean the fork.
 
 **Upstream baseline**: the exact upstream release this fork starts from:
-EmberGL v0.1.1, tag commit `cedba19604ddfa6f2de5679cf398952de3a554d`, MIT,
+EmberGL v0.1.1, tag commit `cedba19604ddfa6f2de5679cf398952de7a3e554`, MIT,
 © 2022 Jarkko Lempiainen, at `github.com/EmberGL-Org/EmberGL`. _Avoid_: "main"
 or "HEAD" as baseline references; vague "current upstream".
 
@@ -108,16 +108,20 @@ all rasterizer/context storage is declared and owned by the caller (no
 steady-state heap allocation; zero `malloc`/`new` in the core). _Avoid_:
 introducing hidden allocations in port code.
 
-**Tile buffer**: the internal-SRAM working memory holding the 64×64-pixel
-render tile (plus depth/Hi-Z) during rasterization. Sits in `rasterizer_memory`
-(`src/egl_rasterizer.h:104-146`), sized by the rasterizer config. _Avoid_:
-confusing with the DMA transfer buffer.
+**Tile buffer**: the working memory holding the 64×64-pixel render tile
+(plus depth/Hi-Z) during rasterization. Sits in `rasterizer_memory`
+(`src/egl_rasterizer.h:104-146`), sized by the rasterizer config. Its memory
+class is caller/provider-selected; the Phase 0 design default is internal
+SRAM, which is an unvalidated assumption (`docs/phase0/06` A3) pending
+Phase 1/2 measurement. _Avoid_: confusing with the DMA transfer buffer;
+stating internal-SRAM placement as a property of the buffer itself.
 
 **Framebuffer**: the full-frame pixel surface to be presented. On the P4
-display path it is expected to live in PSRAM (DPI panel drivers allocate it
-from `MALLOC_CAP_SPIRAM`). Phase 0 does not implement or measure this.
-_Avoid_: assuming framebuffer memory is internal SRAM; assuming it is
-cache-coherent.
+display path it is expected to live in PSRAM **where PSRAM exists** (DPI
+panel drivers allocate it from `MALLOC_CAP_SPIRAM`; `CONFIG_SPIRAM` defaults
+off, so this is conditional on project configuration). Phase 0 does not
+implement or measure this. _Avoid_: assuming framebuffer memory is internal
+SRAM; assuming PSRAM is present; assuming it is cache-coherent.
 
 **Rendering context**: one independent rendering state machine (device +
 rasterizer + buffers). Phase 0 assumes exactly one. _Avoid_: designing APIs

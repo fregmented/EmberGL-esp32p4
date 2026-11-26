@@ -54,7 +54,7 @@ Agent guidance:
 ## Upstream attribution
 
 - Upstream project: [EmberGL-Org/EmberGL](https://github.com/EmberGL-Org/EmberGL)
-- Baseline release: v0.1.1 (commit `cedba19604ddfa6f2de5679cf398952de3a554d`)
+- Baseline release: v0.1.1 (commit `cedba19604ddfa6f2de5679cf398952de7a3e554`)
 - License: MIT — © 2022 Jarkko Lempiainen (see [LICENSE](LICENSE))
 - `src/`, `examples/`, and `doc/` are byte-identical to the upstream v0.1.1
   snapshot; all content below the separator is the upstream README,

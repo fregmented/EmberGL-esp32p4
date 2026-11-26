@@ -279,8 +279,10 @@ $RECYCLE.BIN/
 # the repository (see AGENTS.md), but local artifacts are ignored in case an
 # IDE or manual run creates them anyway.
 #
-# Never ignore example/sdkconfig.ci (CI configuration, tracked) or
-# dependencies.lock (component-manager lock, tracked).
+# Never ignore example/sdkconfig.ci (CI configuration) or
+# dependencies.lock (component-manager lock): both stay un-ignored so they
+# can be committed deliberately when a configuration is finalized. No
+# dependencies.lock is tracked anywhere in the repository today.
 #-------------------------------------------------------------------------------
 
 /build/

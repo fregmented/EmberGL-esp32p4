@@ -54,6 +54,14 @@ Phase 1 starts from a reviewed design.
 `CMakeLists.txt` and no root `idf_component.yml` today; creating them is a
 Phase 1 change gated on owner approval of this proposal.
 
+## Alternatives considered
+
+A `components/embergl/` subdirectory was rejected because it fragments the
+upstream layout; an out-of-tree wrapper component was rejected because it
+duplicates registration; leaving the library unpackaged and listing
+`src/egl_*.cpp` in each consumer's `main` was rejected because it scatters
+the build definition across every consumer.
+
 ## Consequences
 
 - Consumers get `idf.py add-dependency`-style consumption of a pinned

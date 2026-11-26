@@ -45,7 +45,8 @@ real gap (note it for `/domain-modeling`).
 If your output contradicts an existing ADR, surface it explicitly rather
 than silently overriding:
 
-> _Contradicts ADR-0007 (event-sourced orders), but worth reopening because…_
+> _Contradicts ADR-0002 (root as an ESP-IDF component), but worth reopening
+> because…_
 
 For this repository, the ADRs most likely to be contradicted by a hasty
 proposal are 0001 (any edit to `src/`, `examples/`, `doc/` needs a ledger

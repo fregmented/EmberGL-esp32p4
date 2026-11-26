@@ -21,7 +21,7 @@ Do not optimize for code brevity at the expense of these properties.
 Apply the following rules in descending order of priority:
 
 1. Project requirements and hardware constraints
-2. This `CONTRIBUTION.md`
+2. This `CODING_CONVENTION.md`
 3. MISRA C:2023
 4. Adapted NASA/JPL Power of Ten rules
 5. Compiler and static-analysis diagnostics

@@ -55,9 +55,13 @@ Four boundaries carry all information across the `extern "C"` line
 - The caller owns all memory, as upstream does (`rasterizer_memory`,
   `src/egl_rasterizer.h:104-146`): zero steady-state allocation.
 - The port asks the caller for a described arena: one descriptor carrying
-  base pointer, size, memory class (internal SRAM vs PSRAM), and runtime
-  alignment (queried via `esp_cache_get_line_size_by_addr()`, never
-  hardcoded).
+  base pointer, size, memory class (internal SRAM vs PSRAM), and the
+  allocator alignment, derived from the build config
+  (`max(CONFIG_CACHE_L1_CACHE_LINE_SIZE, CONFIG_CACHE_L2_CACHE_LINE_SIZE)`
+  for external memory, `CONFIG_CACHE_L1_CACHE_LINE_SIZE` for internal-only)
+  and verified post-allocation with the public
+  `esp_cache_get_line_size_by_addr(buf)` (non-zero, divides address and
+  size) — never hardcoded (see `02` row 5).
 - Sub-allocations (tile buffer, depth, Hi-Z, vcache, PSO store, DMA ring)
   are carved deterministically by offset; the carve table is a stable,
   documented layout so two builds of the same config have identical
@@ -100,7 +104,9 @@ Four boundaries carry all information across the `extern "C"` line
 
 ## 4. Memory model (proposal)
 
-- **Internal SRAM** (~600 KB usable after the 128 KB default L2 carve-out):
+- **Internal SRAM** (ESTIMATED ~620 KB usable on rev ≥ v3 silicon: 768 KB
+  window − 128 KB default L2 carve-out − ~20 KB top reservation; rev < v3
+  gives ≈236 KiB — see `02` row 3):
   render tile (64×64), depth tile, Hi-Z, PTV buffer, per-worker tile
   buffers, stacks, port statics. Illustrative footprint for a 480×800
   RGB565 device with default config, `max_concurrency=1` (ESTIMATED from the

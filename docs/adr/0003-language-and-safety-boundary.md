@@ -47,10 +47,18 @@ boundary determines the public ABI for everything Phase 1+ builds.
 5. **No IDF headers in `src/egl_*.h`.** Platform knowledge enters only
    through the `HWDevice` contract (`src/egl_device.h`). The frozen snapshot
    gains no platform-specific includes.
-6. **Precedence note**: where ADR text and `CODING_CONVENTION.md` conflict,
-   the convention wins for code style/safety rules (see AGENTS.md
-   precedence). Upstream C++ is third-party and exempt from the convention;
-   `port/` code is not.
+6. **Precedence note**: for code style and safety rules,
+   `CODING_CONVENTION.md` outranks this ADR and every other document for
+   repo-owned code — its §1 rule hierarchy is authoritative for anything
+   this repository owns. Upstream C++ (`src/`) is third-party and exempt
+   from the convention; `port/` code is not.
+
+## Alternatives considered
+
+An all-C port (converting the upstream core to C) was rejected because it
+would rewrite the frozen snapshot wholesale; an all-C++ platform layer under
+MISRA C++ was rejected because the project convention pins MISRA C:2023 as
+the safety baseline for repo-owned code.
 
 ## Consequences
 
@@ -67,11 +75,13 @@ boundary determines the public ABI for everything Phase 1+ builds.
 ## Evidence
 
 - MEASURED: upstream compiles as-is with the target toolchain —
-  `-fsyntax-only` with `-std=gnu++26 -march=rv32imafdc_zicsr_zifencei` on
-  `egl_core.cpp`, `egl_mesh.cpp`, `egl_texture.cpp`, `egl_rasterizer.cpp`,
-  `egl_rasterizer_tiling.cpp`, `egl_rasterizer_cache.cpp` (GCC 15.2.0,
-  2026-11-26); also `-std=gnu++11|17|20|26` for a TU including all public
-  headers.
+  `-fsyntax-only` with the canonical command
+  `riscv32-esp-elf-g++ -std=gnu++26 -march=rv32imafdc_zicsr_zifencei_zaamo_zalrsc -mabi=ilp32 -Isrc -fsyntax-only <file>`
+  on `egl_core.cpp`, `egl_mesh.cpp`, `egl_texture.cpp`, `egl_rasterizer.cpp`,
+  `egl_rasterizer_tiling.cpp`, `egl_rasterizer_cache.cpp`, and
+  `-std=gnu++11|17|20|26` for a TU including all public headers (same
+  `-march`/`-mabi` throughout; GCC 15.2.0; log:
+  `/tmp/opencode/embergl-p4/syntax-check.log`, 2026-11-26).
 - MEASURED: `src/egl_core.h:35` hard-defines `EGL_DEBUG`; the driver `.cpp`
   bodies are entirely inside `#ifdef ARDUINO`
   (`src/drivers/egl_device_ili9341.cpp:8`), so under IDF they compile to

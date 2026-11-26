@@ -66,10 +66,15 @@ Verified API landscape (IDF 6.1.1, `$IDF_PATH/components/...`):
      movement (tile writeback into a framebuffer, surface-to-surface
      copies) via `esp_async_color_convert`.
 2. **Capability gate** (runtime, before any engine call): SoC support,
-   driver installed, buffer memory class and alignment (query with the
-   public `esp_cache_get_line_size_by_addr()`; never hardcode 64 B),
-   dimension ≤ 16383, format membership in the op's format list, in-flight
-   buffer exclusivity.
+   driver installed, buffer memory class and alignment (IDF 6.1.1 has no
+   public pre-allocation alignment API — derive the allocator alignment
+   from the build config: `max(CONFIG_CACHE_L1_CACHE_LINE_SIZE,
+   CONFIG_CACHE_L2_CACHE_LINE_SIZE)` for external memory,
+   `CONFIG_CACHE_L1_CACHE_LINE_SIZE` for internal-only; after allocation,
+   verify `esp_cache_get_line_size_by_addr(buf)` is non-zero and divides
+   both address and size; never hardcode 64 B; MSPI/DMA2D alignment may
+   exceed the cache line), dimension ≤ 16383, format membership in the
+   op's format list, in-flight buffer exclusivity.
 3. **Policy modes**: `off` = software twin always; `auto` = hardware when
    the gate passes, otherwise the software twin; `force` = hardware or an
    **explicit, returned failure** — never a silent fallback to software.
@@ -81,6 +86,14 @@ Verified API landscape (IDF 6.1.1, `$IDF_PATH/components/...`):
 6. **No performance claims.** Engine selection in Phase 0/1 is justified by
    functional fit and measurement discipline (see `docs/phase0/04`), never
    by assumed speedups.
+
+## Alternatives considered
+
+Using no hardware engines at all was rejected because it abandons
+demonstrated SoC capabilities without measurement; making PPA/DMA2D
+mandatory with no software fallback was rejected because it couples
+correctness to engine availability and alignment envelopes that vary by
+configuration and memory class.
 
 ## Consequences
 
