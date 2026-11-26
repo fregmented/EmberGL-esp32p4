@@ -1,0 +1,3 @@
+[submodule "docs/agents/general_instruction"]
+	path = docs/agents/general_instruction
+	url = git@github.com:fregmented/general_instruction.git
