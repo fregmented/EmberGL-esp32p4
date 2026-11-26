@@ -1,3 +1,67 @@
+# EmberGL for ESP32-P4
+
+> **Status: Phase 0 — design only.** This fork currently contains the
+> unmodified EmberGL v0.1.1 core plus project documentation (architecture
+> decisions, Phase 0 design docs, agent guidance). No ESP32-P4 platform code,
+> component packaging, display integration, or hardware acceleration exists
+> yet; nothing here should be consumed as a working port.
+
+## Scope
+
+This repository specializes the EmberGL software rasterizer for the
+ESP32-P4 SoC (memory map, caches, DMA/2D-DMA/PPA engines, ISA, FreeRTOS) at
+the SoC level only — it remains a general-purpose library, not a
+board/display/product binding.
+
+## Support matrix
+
+| Area | State |
+| --- | --- |
+| Upstream EmberGL core (`src/`) | Preserved, byte-identical to v0.1.1 |
+| ESP32-P4 specialization | Design only (Phase 0 docs) |
+| Component packaging (root IDF component) | Proposed, Phase 1 (ADR-0002) |
+| P4 device backend | Not implemented |
+| Display / hardware bring-up | Not implemented, not verified on hardware |
+| PPA / 2D-DMA acceleration | Proposed policies only (ADR-0004) |
+| Multicore workers | Proposed, upstream supports capacity only |
+| `example/` ESP32-P4 project | Build-verification target only (stock IDF scaffold; does not link EmberGL) |
+| Upstream Arduino examples (`examples/`) | Upstream-only, unchanged |
+
+## Documentation
+
+Phase 0 design docs:
+
+- [00 — Repository and environment status](docs/phase0/00-repository-and-environment-status.md)
+- [01 — Upstream audit and feature inventory](docs/phase0/01-upstream-audit-and-feature-inventory.md)
+- [02 — Verified hardware capability matrix](docs/phase0/02-hardware-capability-matrix.md)
+- [03 — Platform integration architecture](docs/phase0/03-platform-integration-architecture.md)
+- [04 — Candidate optimizations and benchmark methodology](docs/phase0/04-candidate-optimizations-and-benchmark-methodology.md)
+- [05 — Roadmap and compatibility requirements](docs/phase0/05-roadmap-and-compatibility.md)
+- [06 — Risks, assumptions, and open questions](docs/phase0/06-risks-assumptions-open-questions.md)
+
+Architecture decision records:
+
+- [ADR-0001 — Frozen upstream snapshot and patch ledger](docs/adr/0001-frozen-upstream-and-patch-ledger.md)
+- [ADR-0002 — Repository root as an ESP-IDF component](docs/adr/0002-root-as-esp-idf-component.md)
+- [ADR-0003 — Language and safety boundary](docs/adr/0003-language-and-safety-boundary.md)
+- [ADR-0004 — Capability-gated accelerator policies](docs/adr/0004-capability-gated-accelerator-policies.md)
+
+Agent guidance:
+
+- [AGENTS.md](AGENTS.md)
+- [GLOSSARY.md](GLOSSARY.md)
+
+## Upstream attribution
+
+- Upstream project: [EmberGL-Org/EmberGL](https://github.com/EmberGL-Org/EmberGL)
+- Baseline release: v0.1.1 (commit `cedba19604ddfa6f2de5679cf398952de7a3e554`)
+- License: MIT — © 2022 Jarkko Lempiainen (see [LICENSE](LICENSE))
+- `src/`, `examples/`, and `doc/` are byte-identical to the upstream v0.1.1
+  snapshot; all content below the separator is the upstream README,
+  preserved unmodified.
+
+---
+
 ![EmberGL logo](doc/images/embergl_logo.png)
 
 ## Overview
