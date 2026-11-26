@@ -271,3 +271,31 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,cmake,ninja,python
+
+#-------------------------------------------------------------------------------
+# ESP-IDF build artifacts (EmberGL ESP32-P4 port)
+#
+# `example/` is the ESP32-P4 test project; builds must run from a copy outside
+# the repository (see AGENTS.md), but local artifacts are ignored in case an
+# IDE or manual run creates them anyway.
+#
+# Never ignore example/sdkconfig.ci (CI configuration, tracked) or
+# dependencies.lock (component-manager lock, tracked).
+#-------------------------------------------------------------------------------
+
+/build/
+/example/build/
+/sdkconfig
+/sdkconfig.old
+/example/sdkconfig
+/example/sdkconfig.old
+/managed_components/
+/example/managed_components/
+/.component_manager/
+/example/.component_manager/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
